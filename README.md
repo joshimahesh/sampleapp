@@ -1,81 +1,156 @@
-package com.bstkdemo.bskDemo;
+package com.testdemo.testDemo;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.TimeUnit;
-
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.TakesScreenshot;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.remote.Augmenter;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
-public class testNGTEST {
-	public static final String USERNAME = "";
-	public static final String AUTOMATE_KEY = "";
-	public static final String URL = "https://" + USERNAME + ":" + AUTOMATE_KEY + "@hub-cloud.browserstack.com/wd/hub";
+class JobData {
 
-	@Test
-	public void testMethod() throws MalformedURLException {
+	String orderID;
+	String shipName;
+	String shipCountry;
+	String shipCity;
+	String shipAddress;
 
-		DesiredCapabilities caps = new DesiredCapabilities();
-		caps.setPlatform(Platform.MAC);
-		caps.setBrowserName("firefox");
-		caps.setVersion("57");
-		caps.setCapability("browserstack.debug", true);
-		URL brwstkurl = new URL(URL);
-		WebDriver driver = new RemoteWebDriver(brwstkurl, caps);
+	public JobData(String orderID) {
+		this.orderID = orderID;
+	}
 
-		// My Account
+	public void setshipName(String shipName) {
+		this.shipName = shipName;
+	}
 
-		driver.get("https://www.phptravels.net/login");
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-		String actualURL = driver.getCurrentUrl();
-		String currentURL = "https://www.phptravels.net/login";
-		Assert.assertEquals("URL are not matched", actualURL, currentURL);
-		driver.quit();
+	public void setshipCountry(String shipCountry) {
+		this.shipCountry = shipCountry;
+	}
+
+	public void setshipCity(String shipCity) {
+		this.shipCity = shipCity;
+	}
+
+	public void setshipAddress(String shipAddress) {
+		this.shipAddress = shipAddress;
+	}
+}
+
+public class App {
+	static WebDriver driver;
+	static String filePathString = "C:\\Jobdata\\JobStatus.xlsx";
+	private static String[] columns = { "orderID", "shipName", "shipName", "shipCity", "shipAddress" };
+	public static List<JobData> jobList1 = new ArrayList<JobData>();
+
+	public void initMethod() {
+		System.setProperty("webdriver.chrome.driver", "C:\\drivers\\chromedriver.exe");
+		driver = new ChromeDriver();
+
+		String baseUrl = "file:///C:/Users/maheshj.BITWISEGLOBAL/Downloads/kendoui.for.jquery.2018.3.1017.trial/examples/grid/frozen-columns.html";
+
+		// launch Fire fox and direct it to the Base URL
+		driver.get(baseUrl);
+		driver.manage().window().maximize();
 
 	}
 
-	/*@Test(dataProvider = "bstkTestData")
-	public void testMethod(Platform platform, String browserName, String browserVersion) throws MalformedURLException {
+	public void ReadCells() throws IOException {
 
-		DesiredCapabilities caps = new DesiredCapabilities();
-		caps.setPlatform(platform);
-		caps.setBrowserName(browserName);
-		caps.setVersion(browserVersion);
-		URL brwstkurl = new URL(URL);
-		WebDriver driver = new RemoteWebDriver(brwstkurl, caps);
+		// To find third row of table
+		List<WebElement> tableRow = driver
+				.findElements(By.xpath("//div[@class=\"k-grid-content-locked\"]/table/tbody/tr"));
 
-		// My Account
+		List<WebElement> tableCols = driver
+				.findElements(By.xpath("//div[@class=\"k-grid-content-locked\"]/table/tbody/tr[1]/td"));
 
-		driver.get("https://www.phptravels.net/login");
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-		
-		
-		driver = (RemoteWebDriver) new Augmenter().augment(driver);
-		File srcFile = (File) ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
-		FileUtils.copyFile(srcFile,new File("/location/to/screenshot.png"));
-		
-		String actualURL = driver.getCurrentUrl();
-		String currentURL = "https://www.phptravels.net/login";
-		Assert.assertEquals("URL are not matched", actualURL, currentURL);
-		driver.quit();
+		List<WebElement> tableColsNext = driver
+				.findElements(By.xpath("//div[@class='k-grid-content k-auto-scrollable']/table/tbody/tr[1]/td"));
 
-	}
+		String tbl1 = "//div[@class='k-grid-content-locked']/table/tbody";
+		String tbl2 = "//div[@class='k-grid-content k-auto-scrollable']/table/tbody";
 
-	@DataProvider(name = "bstkTestData", parallel = true)
-	public Object[][] getData() {
-		Object[][] testData = new Object[][] { { Platform.MAC, "chrome", "62.0" }, { Platform.WIN8, "chrome", "62.0" },
-				{ Platform.WINDOWS, "firefox", "57" } };
-		return testData;
+		String cntSpan = driver.findElement(By.xpath("//span[@class='k-pager-info k-label']")).getText();
+		int cnt = Integer.parseInt(cntSpan.split(" ")[4]);
+		cnt = cnt / 50;
 
-	}
+		WebElement lnkNext = driver.findElement(By.xpath("//a[@title='Go to the next page']"));
+		System.out.println("Size " + cnt);
+		// span[@class='k-pager-info k-label']
+
+		ArrayList<JobData> arraylist = new ArrayList<JobData>();
+		boolean isFirstTableDoene = false;
+		boolean isSecondTableDoene = false;
+		for (int m = 1; m <= cnt; m++) {
+			/*System.out.println("RowSize" + tableRow.size());
+			System.out.println("ColSize" + tableCols.size());
 */
+			if (!isFirstTableDoene) {
+				isFirstTableDoene = true;
+				for (int j = 1; j <= tableCols.size(); j++) {
+
+					for (int i = 1; i <= tableRow.size(); i++) {
+						WebElement cell = driver.findElement(By.xpath(tbl1 + "/tr[" + i + "]/td[" + j + "]"));
+						if (j == 1) {
+							arraylist.add(new JobData(cell.getText()));
+						} else if (j == 2) {
+							arraylist.get(i - 1).setshipName(cell.getText());
+						}
+					}
+				}
+			}
+
+			if (!isSecondTableDoene) {
+				isSecondTableDoene = true;
+				for (int j = 1; j <= tableColsNext.size(); j++) {
+
+					for (int i = 1; i <= tableRow.size(); i++) {
+
+						WebElement cell = driver.findElement(By.xpath(tbl2 + "/tr[" + i + "]/td[" + j + "]"));
+						if (j == 1) {
+							arraylist.get(i - 1).setshipCountry(cell.getText());
+						}
+						if (j == 2) {
+							arraylist.get(i - 1).setshipCity(cell.getText());
+						}
+						if (j == 3) {
+							arraylist.get(i - 1).setshipAddress(cell.getText());
+						}
+					}
+				}
+			}
+			
+			System.out.println("---LIST--" + arraylist.size());
+			for (JobData jobData : arraylist) {
+				System.out.println(jobData.orderID + " | " + jobData.shipName + " | " + jobData.shipCountry + " | "
+						+ jobData.shipCity + " | " + jobData.shipAddress);
+
+			}
+			
+			arraylist.clear();
+
+			isFirstTableDoene = isSecondTableDoene = false;
+			lnkNext.click();
+		}
+
+		
+
+	}
+
+	public static void main(String[] args) throws IOException {
+		App obj = new App();
+		obj.initMethod();
+		obj.ReadCells();
+		driver.quit();
+	}
+
 }
