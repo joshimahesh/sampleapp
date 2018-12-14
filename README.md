@@ -1,12 +1,15 @@
 package com.bstkdemo.bskDemo;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.cert.TrustAnchor;
 import java.util.concurrent.TimeUnit;
 
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Platform;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.remote.Augmenter;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.testng.Assert;
@@ -25,6 +28,7 @@ public class testNGTEST {
 		caps.setPlatform(Platform.MAC);
 		caps.setBrowserName("firefox");
 		caps.setVersion("57");
+		caps.setCapability("browserstack.debug", true);
 		URL brwstkurl = new URL(URL);
 		WebDriver driver = new RemoteWebDriver(brwstkurl, caps);
 
@@ -53,6 +57,12 @@ public class testNGTEST {
 
 		driver.get("https://www.phptravels.net/login");
 		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		
+		
+		driver = (RemoteWebDriver) new Augmenter().augment(driver);
+		File srcFile = (File) ((TakesScreenshot)driver).getScreenshotAs(OutputType.FILE);
+		FileUtils.copyFile(srcFile,new File("/location/to/screenshot.png"));
+		
 		String actualURL = driver.getCurrentUrl();
 		String currentURL = "https://www.phptravels.net/login";
 		Assert.assertEquals("URL are not matched", actualURL, currentURL);
@@ -66,6 +76,6 @@ public class testNGTEST {
 				{ Platform.WINDOWS, "firefox", "57" } };
 		return testData;
 
-	}*/
-
+	}
+*/
 }
