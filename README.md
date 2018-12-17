@@ -1,23 +1,32 @@
-package com.testdemo.testDemo;
+package com.test.test;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.interactions.Actions;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 
-class JobData {
+class JobData1 {
 
 	String orderID;
 	String shipName;
@@ -25,131 +34,185 @@ class JobData {
 	String shipCity;
 	String shipAddress;
 
-	public JobData(String orderID) {
+	public JobData1(String orderID) {
 		this.orderID = orderID;
 	}
 
-	public void setshipName(String shipName) {
+	public void shipName(String shipName) {
 		this.shipName = shipName;
 	}
 
-	public void setshipCountry(String shipCountry) {
+	public void shipCountry(String shipCountry) {
 		this.shipCountry = shipCountry;
 	}
 
-	public void setshipCity(String shipCity) {
+	public void shipCity(String shipCity) {
 		this.shipCity = shipCity;
 	}
 
-	public void setshipAddress(String shipAddress) {
+	public void shipAddress(String shipAddress) {
 		this.shipAddress = shipAddress;
 	}
+
 }
 
-public class App {
-	static WebDriver driver;
-	static String filePathString = "C:\\Jobdata\\JobStatus.xlsx";
+public class TestClass {
+
+	public static WebDriver driver;
+	static ArrayList<JobData1> list = new ArrayList<JobData1>();
+
 	private static String[] columns = { "orderID", "shipName", "shipName", "shipCity", "shipAddress" };
-	public static List<JobData> jobList1 = new ArrayList<JobData>();
 
-	public void initMethod() {
-		System.setProperty("webdriver.chrome.driver", "C:\\drivers\\chromedriver.exe");
+	public TestClass() {
+		System.setProperty("webdriver.chrome.driver",
+				"C:\\Users\\MAHESH\\Downloads\\chromedriver_win32\\chromedriver.exe");
 		driver = new ChromeDriver();
+		driver.get(
+				"file:///C:/Users/MAHESH/Downloads/kendoui.for.jquery.2018.3.1017.trial/examples/grid/frozen-columns.html");
+	}
 
-		String baseUrl = "file:///C:/Users/maheshj.BITWISEGLOBAL/Downloads/kendoui.for.jquery.2018.3.1017.trial/examples/grid/frozen-columns.html";
+	public void performOperation() throws IOException {
 
-		// launch Fire fox and direct it to the Base URL
-		driver.get(baseUrl);
-		driver.manage().window().maximize();
+		List<WebElement> tableOneCol = driver.findElements(By.xpath("//*[@class='k-grid-content-locked']//tr[1]//td"));
+		List<WebElement> tableTwoCol = driver
+				.findElements(By.xpath("//*[@class='k-grid-content k-auto-scrollable']//tr[1]//td"));
+
+		for (int i = 1; i <= tableOneCol.size(); i++) {
+			List<WebElement> tableRow1 = driver
+					.findElements(By.xpath("//*[@class='k-grid-content-locked']//tr//td[" + i + "][text() !='']"));
+			CreateList(tableRow1, i);
+		}
+
+		for (int j = 1; j <= tableTwoCol.size(); j++) {
+			List<WebElement> tableRow1 = driver.findElements(
+					By.xpath("//*[@class='k-grid-content k-auto-scrollable']//tr//td[" + j + "][text() !='']"));
+			CreateList(tableRow1, j + 2);
+		}
+
+		for (JobData1 job : list) {
+			System.out.println(job.orderID + "|" + job.shipName + "|" + job.shipCountry + "|" + job.shipCity + "|"
+					+ job.shipAddress);
+		}
+
+		processExcel(list);
 
 	}
 
-	public void ReadCells() throws IOException {
-
-		// To find third row of table
-		List<WebElement> tableRow = driver
-				.findElements(By.xpath("//div[@class=\"k-grid-content-locked\"]/table/tbody/tr"));
-
-		List<WebElement> tableCols = driver
-				.findElements(By.xpath("//div[@class=\"k-grid-content-locked\"]/table/tbody/tr[1]/td"));
-
-		List<WebElement> tableColsNext = driver
-				.findElements(By.xpath("//div[@class='k-grid-content k-auto-scrollable']/table/tbody/tr[1]/td"));
-
-		String tbl1 = "//div[@class='k-grid-content-locked']/table/tbody";
-		String tbl2 = "//div[@class='k-grid-content k-auto-scrollable']/table/tbody";
-
-		String cntSpan = driver.findElement(By.xpath("//span[@class='k-pager-info k-label']")).getText();
-		int cnt = Integer.parseInt(cntSpan.split(" ")[4]);
-		cnt = cnt / 50;
-
-		WebElement lnkNext = driver.findElement(By.xpath("//a[@title='Go to the next page']"));
-		System.out.println("Size " + cnt);
-		// span[@class='k-pager-info k-label']
-
-		ArrayList<JobData> arraylist = new ArrayList<JobData>();
-		boolean isFirstTableDoene = false;
-		boolean isSecondTableDoene = false;
-		for (int m = 1; m <= cnt; m++) {
-			/*System.out.println("RowSize" + tableRow.size());
-			System.out.println("ColSize" + tableCols.size());
-*/
-			if (!isFirstTableDoene) {
-				isFirstTableDoene = true;
-				for (int j = 1; j <= tableCols.size(); j++) {
-
-					for (int i = 1; i <= tableRow.size(); i++) {
-						WebElement cell = driver.findElement(By.xpath(tbl1 + "/tr[" + i + "]/td[" + j + "]"));
-						if (j == 1) {
-							arraylist.add(new JobData(cell.getText()));
-						} else if (j == 2) {
-							arraylist.get(i - 1).setshipName(cell.getText());
-						}
-					}
-				}
+	public static void CreateList(List<WebElement> tableRowParam, int iVal) {
+		if (iVal == 1) {
+			for (int iValParam = 0; iValParam < tableRowParam.size(); iValParam++) {
+				JobData1 o = new JobData1(tableRowParam.get(iValParam).getText());
+				list.add(o);
 			}
-
-			if (!isSecondTableDoene) {
-				isSecondTableDoene = true;
-				for (int j = 1; j <= tableColsNext.size(); j++) {
-
-					for (int i = 1; i <= tableRow.size(); i++) {
-
-						WebElement cell = driver.findElement(By.xpath(tbl2 + "/tr[" + i + "]/td[" + j + "]"));
-						if (j == 1) {
-							arraylist.get(i - 1).setshipCountry(cell.getText());
-						}
-						if (j == 2) {
-							arraylist.get(i - 1).setshipCity(cell.getText());
-						}
-						if (j == 3) {
-							arraylist.get(i - 1).setshipAddress(cell.getText());
-						}
-					}
-				}
-			}
-			
-			System.out.println("---LIST--" + arraylist.size());
-			for (JobData jobData : arraylist) {
-				System.out.println(jobData.orderID + " | " + jobData.shipName + " | " + jobData.shipCountry + " | "
-						+ jobData.shipCity + " | " + jobData.shipAddress);
-
-			}
-			
-			arraylist.clear();
-
-			isFirstTableDoene = isSecondTableDoene = false;
-			lnkNext.click();
 		}
 
+		else if (iVal == 2) {
+			for (int iValParam = 0; iValParam < tableRowParam.size(); iValParam++) {
+				list.get(iValParam).shipName(tableRowParam.get(iValParam).getText());
+			}
+		}
+
+		else if (iVal == 3) {
+			for (int iValParam = 0; iValParam < tableRowParam.size(); iValParam++) {
+				list.get(iValParam).shipCountry(tableRowParam.get(iValParam).getText());
+			}
+		} else if (iVal == 4) {
+			for (int iValParam = 0; iValParam < tableRowParam.size(); iValParam++) {
+				list.get(iValParam).shipCity(tableRowParam.get(iValParam).getText());
+			}
+		} else if (iVal == 5) {
+			for (int iValParam = 0; iValParam < tableRowParam.size(); iValParam++) {
+				list.get(iValParam).shipAddress(tableRowParam.get(iValParam).getText());
+			}
+		}
+	}
+
+	public static void processExcel(List<JobData1> jobList) throws IOException {
+		String filePathString = "C:\\Jobdata\\JobStatus";
+
+		String pattern = "yyyyMMdd";
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+
+		String date = simpleDateFormat.format(new Date());
+		filePathString = filePathString + date + ".xlsx";
+
+		if (Files.exists(Paths.get(filePathString))) {
+
+		}
+
+		else {
+
+			System.out.println(".......here");
+			Workbook workbook = new XSSFWorkbook(); // new HSSFWorkbook() for generating `.xls` file
+			CreationHelper createHelper = workbook.getCreationHelper();
+			Sheet sheet = workbook.createSheet("Job");
+			Font headerFont = workbook.createFont();
+			headerFont.setBold(true);
+			headerFont.setFontHeightInPoints((short) 14);
+			headerFont.setColor(IndexedColors.RED.getIndex());
+			CellStyle headerCellStyle = workbook.createCellStyle();
+
+			// Create Other rows and cells with employees data
+			int rowNum = sheet.getLastRowNum();
+			for (JobData1 job : jobList) {
+				Row row = sheet.createRow(rowNum++);
+
+				row.createCell(0).setCellValue(job.orderID);
+				row.createCell(1).setCellValue(job.shipName);
+				row.createCell(2).setCellValue(job.shipCountry);
+				row.createCell(3).setCellValue(job.shipCity);
+				row.createCell(4).setCellValue(job.shipAddress);
+
+			}
+
+			
+			Row row = sheet.createRow(rowNum++);
+			for (int i = 0; i < columns.length; i++) {
+				Cell cell1 = row.createCell(i);
+				cell1.setCellValue(columns[i]);
+				cell1.setCellStyle(headerCellStyle);
+
+				Cell cell2 = row.createCell(i + 1);
+				cell2.setCellValue(columns[i + 1]);
+				cell2.setCellStyle(headerCellStyle);
+
+				Cell cell3 = row.createCell(i + 2);
+				cell3.setCellValue(columns[i + 2]);
+				cell3.setCellStyle(headerCellStyle);
+
+				Cell cell4 = row.createCell(i + 3);
+				cell4.setCellValue(columns[i + 3]);
+				cell4.setCellStyle(headerCellStyle);
+
+				Cell cell5 = row.createCell(i + 4);
+				cell5.setCellValue(columns[i + 4]);
+				cell5.setCellStyle(headerCellStyle);
+				
+				
+			}
+			CellStyle dateCellStyle = workbook.createCellStyle();
+			
+			
 		
+	        
+	        
+			// Resize all columns to fit the content size
+			for (int i = 0; i < columns.length; i++) {
+				sheet.autoSizeColumn(i);
+			}
+
+			FileOutputStream fileOut = new FileOutputStream(filePathString);
+			workbook.write(fileOut);
+			fileOut.close();
+			workbook.close();
+
+		}
 
 	}
 
 	public static void main(String[] args) throws IOException {
-		App obj = new App();
-		obj.initMethod();
-		obj.ReadCells();
+
+		new TestClass().performOperation();
 		driver.quit();
 	}
 
