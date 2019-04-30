@@ -180,3 +180,90 @@ public class steptwo extends TestBase {
 	}
 
 }
+-------------------------------------------
+package com.test.test;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Arrays;
+
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class DEMO {
+
+	public void readExcel() throws Exception {
+		int numRows = 0, numCols = 0;
+		// Calculate array size
+		File file = new File("C:\\workspace\\test\\src\\test\\java\\com\\test\\test\\");
+		File[] files = file.listFiles();
+		for (File f : files) {
+			FileInputStream myStream = new FileInputStream(f.getPath());
+			XSSFWorkbook myWorkbook = new XSSFWorkbook(myStream);
+			XSSFSheet mySheet = myWorkbook.getSheetAt(0);
+			numRows = numRows + mySheet.getLastRowNum();
+			numCols = mySheet.getRow(0).getLastCellNum();
+			System.out.println("P" + numRows);
+			
+		}
+		numRows = numRows + 2;
+		String[][] excelData = new String[numRows+2][numCols];
+		
+		
+		System.out.println("Accessing spreadsheet and setting up Array");
+		File file1 = new File("C:\\workspace\\test\\src\\test\\java\\com\\test\\test\\");
+		File[] files1 = file1.listFiles();
+		for (File f1 : files1) {
+			FileInputStream myStream = new FileInputStream(f1.getPath());
+			XSSFWorkbook myWorkbook = new XSSFWorkbook(myStream);
+			XSSFSheet mySheet = myWorkbook.getSheetAt(0);
+			
+			for (int i = 0; i < numRows; i++) {
+				XSSFRow row = mySheet.getRow(i);
+				for (int j = 0; j < numCols; j++) {
+					XSSFCell cell = row.getCell(j);
+					String value = cellToString(cell);
+					excelData[i][j] = value;
+				}
+			}
+			System.out.println("Array population complete");
+			System.out.println(excelData);
+			System.out.println(Arrays.deepToString(excelData));
+			
+		}
+
+		// Access spreadsheet
+		
+		System.out.println("Populating Array");
+	
+	}
+
+	public String cellToString(XSSFCell cell) {
+
+		String result;
+
+		// Formulas can't be evaluated, so throw an Exception if one is encountered
+		if (cell.getCellTypeEnum() == CellType.FORMULA) {
+			throw new RuntimeException("Cannot process a formula. Please change field to result of formula.");
+		}
+		// If blanks are ever able to be evaluated by Apache POI, set them to empty
+		// string
+		else if (cell.getCellTypeEnum() == CellType.BLANK) {
+			result = " ";
+		}
+		// Convert cell contents to String
+		else {
+			result = String.valueOf(cell);
+		}
+		return result;
+	}
+
+	public static void main(String[] args) throws Exception {
+		// TODO Auto-generated method stub
+		new DEMO().readExcel();
+	}
+
+}
